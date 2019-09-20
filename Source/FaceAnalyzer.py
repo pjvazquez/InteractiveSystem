@@ -49,7 +49,10 @@ class FaceAnalyzer:
                  detect_emotions=True,
                  face_detection_upscales=0):
 
-        self.aggregator = aggregator
+        # what does Aggregator makes?
+        # seems it generates packages for sending to the web server
+        # do not use it
+        # self.aggregator = aggregator
         self.face_detection_upscales = face_detection_upscales
 
         self.face_detector = FaceDetectorDlib()
@@ -76,10 +79,35 @@ class FaceAnalyzer:
             self.face_identifier = None
 
     def analyze_frame(self, rgb_frame):
+        """
+        Performs analysis over frame
+
+        Parameters
+        ----------
+        rgb_frame : captured frame
+        
+        Returns
+        -------
+        analyze_faces : function
+
+        """
         detected_faces, aligned_faces = self.face_detector.detect_faces(rgb_frame, self.face_detection_upscales)
         return self.analyze_faces(detected_faces, aligned_faces)
 
     def analyze_faces(self, detected_faces, aligned_faces):
+        """
+        Performs analysis over faces
+
+        Parameters
+        ----------
+        detected_faces : list of detected faces
+        aligned_faces : list of aligned faces
+        
+        Returns
+        -------
+        analyze_faces : function
+
+        """
         # speed up the thing if there are no faces
         if len(detected_faces) == 0:
             return {"frontal_visitors": 0, "detected_males": 0, "detected_females": 0, "analyzed_faces": []}
@@ -180,24 +208,25 @@ if __name__ == "__main__":
     import math
     import traceback
     import imutils
-    from elasticsearch import Elasticsearch
+    # from elasticsearch import Elasticsearch
 
-    with open("../conf/application.conf", "r") as confFile:
+    with open("../Config/application.conf", "r") as confFile:
         conf = json.loads(confFile.read())
 
-    face_id_backend = Elasticsearch(
+'''    face_id_backend = Elasticsearch(
         conf["face_id_backend"]["hosts"],
         http_auth=(conf["face_id_backend"]["user"], conf["face_id_backend"]["pass"]),
         port=conf["face_id_backend"]["port"],
         scheme=conf["face_id_backend"]["scheme"]
     )
-
-    processor = FaceAnalyzer(None, face_id_backend,
-                             identify_faces=False,
-                             detect_ages=True,
-                             detect_emotions=True,
-                             detect_genders=True,
-                             face_detection_upscales=0)
+'''
+    processor = FaceAnalyzer(None, 
+                            face_id_backend,
+                            identify_faces=False,
+                            detect_ages=True,
+                            detect_emotions=True,
+                            detect_genders=True,
+                            face_detection_upscales=0)
     while True:
 
         # read new frame

@@ -4,7 +4,7 @@ import time
 import cv2
 import dlib
 import numpy as np
-from imutils.face_utils import FaceAligner
+# from imutils.face_utils import FaceAligner
 
 from utils import get_logger
 
@@ -16,8 +16,8 @@ class FaceDetectorDlib:
     def __init__(self, desired_face_width=200):
         self.detector = dlib.get_frontal_face_detector()
         # TODO: allow less landmarks: https://github.com/davisking/dlib-models
-        predictor = dlib.shape_predictor("../models/face_detection/shape_predictor_68_face_landmarks.dat")
-        self.fa = FaceAligner(predictor, desiredFaceWidth=desired_face_width)
+        predictor = dlib.shape_predictor("./Models/face_detection/shape_predictor_68_face_landmarks.dat")
+        # self.fa = FaceAligner(predictor, desiredFaceWidth=desired_face_width)
         self.desired_face_width = desired_face_width
 
     def detect_faces(self, frame, upscalings=0):
@@ -30,7 +30,8 @@ class FaceDetectorDlib:
         detections = []
         for i, d in enumerate(detected):
             # TODO: allow offset margins to be applied here!
-            faces[i, :, :, :] = self.fa.align(frame, gray, detected[i])
+            # faces[i, :, :, :] = self.fa.align(frame, gray, detected[i])
+            faces[i, :, :, :] =  detected[i]
 
             # debug stuff
             # cv2.imshow("DEBUG FACE ALIGNMENT " + str(i), faces[i, :, :, :].astype('uint8'))
@@ -207,21 +208,27 @@ if __name__ == "__main__":
     import json
     import math
     import traceback
-    import imutils
+    # import imutils
     # from elasticsearch import Elasticsearch
 
-    with open("../Config/application.conf", "r") as confFile:
+    with open("./Config/application.conf", "r") as confFile:
         conf = json.loads(confFile.read())
 
-'''    face_id_backend = Elasticsearch(
+    '''    face_id_backend = Elasticsearch(
         conf["face_id_backend"]["hosts"],
         http_auth=(conf["face_id_backend"]["user"], conf["face_id_backend"]["pass"]),
         port=conf["face_id_backend"]["port"],
         scheme=conf["face_id_backend"]["scheme"]
     )
-'''
-    processor = FaceAnalyzer(None, 
-                            face_id_backend,
+    
+    processor = FaceAnalyzer(None, face_id_backend,
+                            identify_faces=False,
+                            detect_ages=True,
+                            detect_emotions=True,
+                            detect_genders=True,
+                            face_detection_upscales=0)
+    '''
+    processor = FaceAnalyzer(None, None,
                             identify_faces=False,
                             detect_ages=True,
                             detect_emotions=True,

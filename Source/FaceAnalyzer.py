@@ -4,8 +4,8 @@ import time
 import cv2
 import dlib
 import numpy as np
-# from imutils.face_utils import FaceAligner
-
+from imutils.face_utils import FaceAligner
+import imutils
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -17,7 +17,7 @@ class FaceDetectorDlib:
         self.detector = dlib.get_frontal_face_detector()
         # TODO: allow less landmarks: https://github.com/davisking/dlib-models
         predictor = dlib.shape_predictor("./Models/face_detection/shape_predictor_68_face_landmarks.dat")
-        # self.fa = FaceAligner(predictor, desiredFaceWidth=desired_face_width)
+        self.fa = FaceAligner(predictor, desiredFaceWidth=desired_face_width)
         self.desired_face_width = desired_face_width
 
     def detect_faces(self, frame, upscalings=0):
@@ -30,8 +30,8 @@ class FaceDetectorDlib:
         detections = []
         for i, d in enumerate(detected):
             # TODO: allow offset margins to be applied here!
-            # faces[i, :, :, :] = self.fa.align(frame, gray, detected[i])
-            faces[i, :, :, :] =  detected[i]
+            faces[i, :, :, :] = self.fa.align(frame, gray, detected[i])
+            # faces[i, :, :, :] =  detected[i]
 
             # debug stuff
             # cv2.imshow("DEBUG FACE ALIGNMENT " + str(i), faces[i, :, :, :].astype('uint8'))

@@ -3,6 +3,7 @@
 import logging
 import sys
 import time
+import cv2
 
 from __init__ import DEFAULT_LOGGING_LEVEL
 

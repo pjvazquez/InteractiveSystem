@@ -1,8 +1,8 @@
 # coding=utf-8
 import tensorflow as tf
-# from imutils import resize
-
 import inception_resnet_v1
+
+from imutils import resize
 from utils import get_logger
 
 logger = get_logger(__name__)

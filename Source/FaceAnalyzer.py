@@ -6,6 +6,7 @@ import dlib
 import numpy as np
 from imutils.face_utils import FaceAligner
 import imutils
+
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -43,12 +44,13 @@ class FaceDetectorDlib:
 
 
 class FaceAnalyzer:
-    def __init__(self, aggregator, face_cache_backend,
-                 identify_faces=False,
-                 detect_genders=True,
-                 detect_ages=True,
-                 detect_emotions=True,
-                 face_detection_upscales=0):
+    def __init__(self, aggregator, 
+                face_cache_backend,
+                identify_faces=False,
+                detect_genders=False,
+                detect_ages=False,
+                detect_emotions=True,
+                face_detection_upscales=0):
 
         # what does Aggregator makes?
         # seems it generates packages for sending to the web server
@@ -65,6 +67,7 @@ class FaceAnalyzer:
             self.age_gender_detector = None
 
         if detect_emotions:
+            # This is the only detector I'm going to use by the moment
             from EmotionDetector import EmotionDetector
             self.emotion_detector = EmotionDetector()
         else:
@@ -82,15 +85,12 @@ class FaceAnalyzer:
     def analyze_frame(self, rgb_frame):
         """
         Performs analysis over frame
-
         Parameters
         ----------
         rgb_frame : captured frame
-        
         Returns
         -------
         analyze_faces : function
-
         """
         detected_faces, aligned_faces = self.face_detector.detect_faces(rgb_frame, self.face_detection_upscales)
         return self.analyze_faces(detected_faces, aligned_faces)
@@ -98,16 +98,13 @@ class FaceAnalyzer:
     def analyze_faces(self, detected_faces, aligned_faces):
         """
         Performs analysis over faces
-
         Parameters
         ----------
         detected_faces : list of detected faces
         aligned_faces : list of aligned faces
-        
         Returns
         -------
         analyze_faces : function
-
         """
         # speed up the thing if there are no faces
         if len(detected_faces) == 0:
@@ -152,9 +149,9 @@ class FaceAnalyzer:
 if __name__ == "__main__":
 
     video_device_id = 0
-    fps = 300
-    width = 1280
-    height = 1024
+    fps = 30
+    width = 640
+    height = 480
 
     # process video
     print(cv2.__version__)
@@ -187,8 +184,9 @@ if __name__ == "__main__":
 
     # initiate the fps thing
     start = time.time()
-    period = 1.0 / fps
+    period = 10.0 / fps
 
+    
 
     def draw_bounding_box(_face_coordinates, image_array, color):
         _face_coordinates = (
@@ -208,11 +206,17 @@ if __name__ == "__main__":
     import json
     import math
     import traceback
-    # import imutils
+    import imutils
+    from collections import deque
     # from elasticsearch import Elasticsearch
+
+    # stack to register last 10 emotions (5 seconds?????)
+    faceStack = deque(maxlen = 10)
 
     with open("./Config/application.conf", "r") as confFile:
         conf = json.loads(confFile.read())
+
+    happiness_threshold = conf['happiness_threshold']
 
     '''    face_id_backend = Elasticsearch(
         conf["face_id_backend"]["hosts"],
@@ -228,11 +232,12 @@ if __name__ == "__main__":
                             detect_genders=True,
                             face_detection_upscales=0)
     '''
-    processor = FaceAnalyzer(None, None,
+    processor = FaceAnalyzer(None, 
+                            None,
                             identify_faces=False,
-                            detect_ages=True,
+                            detect_ages=False,
                             detect_emotions=True,
-                            detect_genders=True,
+                            detect_genders=False,
                             face_detection_upscales=0)
     while True:
 
@@ -252,7 +257,7 @@ if __name__ == "__main__":
                 continue
             # print("Done in %s seconds" % (time.time() - start_time))
 
-            # pprint(detections)
+            # print(detections)
 
             if detections:
                 # noinspection PyTypeChecker
@@ -275,10 +280,19 @@ if __name__ == "__main__":
                         y_offset += 10
                         for _label in ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']:
                             emotion_lenght = int(math.ceil(face["emotions"][_label] * 10))
+                            if _label == 'happy':
+                                if len(faceStack) >= 10:
+                                    faceStack.popleft()
+                                faceStack.append(emotion_lenght)
+                                happiness = np.sum(faceStack)
+                                # print(happiness, faceStack)
+                                if happiness > happiness_threshold:
+                                    happyImage = cv2.imread('./Slides/happy.jpg')
+                                    cv2.imshow("happy", happyImage)
                             label_text = _label + ":" + " " * (10 - len(_label))
                             emotions_label = label_text + ("+" * emotion_lenght) + ("-" * (10 - emotion_lenght))
-                            coords = (
-                            face_coordinates["x"] - 30, face_coordinates["y"] + face_coordinates["h"] + y_offset)
+                            coords = (face_coordinates["x"] - 30, 
+                                        face_coordinates["y"] + face_coordinates["h"] + y_offset)
                             draw_label(frame, coords, emotions_label, font_scale=0.4, thickness=0)
                             y_offset += 10
 
@@ -287,4 +301,5 @@ if __name__ == "__main__":
 
         # if tk gui is being shown, exit by keyword press
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
             break

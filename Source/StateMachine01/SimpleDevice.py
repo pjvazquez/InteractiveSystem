@@ -1,6 +1,6 @@
 # simple_device.py
 
-from my_states import LockedState
+from My_States import LockedState
 
 class SimpleDevice(object):
     """ 

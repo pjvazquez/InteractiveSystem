@@ -7,7 +7,7 @@ class State(object):
     """
 
     def __init__(self):
-        print 'Processing current state:', str(self)
+        print('Processing current state:', str(self))
 
     def on_event(self, event):
         """

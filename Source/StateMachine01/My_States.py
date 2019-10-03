@@ -1,6 +1,6 @@
 # my_states.py
 
-from state import State
+from State import State
 
 # Start of our states
 class LockedState(State):

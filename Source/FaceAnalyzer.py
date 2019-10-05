@@ -148,7 +148,7 @@ class FaceAnalyzer:
 
 if __name__ == "__main__":
 
-    video_device_id = 1
+    video_device_id = 0
     fps = 30
     width = 640
     height = 480

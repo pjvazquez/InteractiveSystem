@@ -32,6 +32,7 @@ class CaptureImage():
     def __init__(self, cameraId, fps = 10):
         self.cameraId = cameraId
         self.fps = fps
+        self.frame = None
 
     def OpenVideoCapture(self):
         """
@@ -62,6 +63,7 @@ class CaptureImage():
 
         """
         ret, frame = VideoCapture.read()
+        self.frame = frame
         cv2.imshow(screenName, frame)
 
     def CloseVideoCapture(self, VideoCapture):

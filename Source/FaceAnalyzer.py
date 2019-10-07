@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
     # process video
     print(cv2.__version__)
-    print("Initiating vídeo caputre...")
+    print("Initiating vídeo capture...")
 
     vcap = cv2.VideoCapture(video_device_id)
 

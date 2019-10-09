@@ -52,14 +52,14 @@ class Smile(object):
 
     # show message on screen
     def show_message(self):
-        print("\n\n\n MESSAGE \n\n\n")
+        print("\n++++++++++++MESSAGE \n")
         self.message = True
 
     # show atracting message on screen
     def show_image(self):
         happyImage = cv2.imread('./Slides/happy.jpg')
         cv2.imshow("happy", happyImage)
-        print("\n\n\n IMAGE \n\n\n")
+        print("\n--------------IMAGE \n")
         self.message = True
 
     # returns TRue if message alrady shopwn

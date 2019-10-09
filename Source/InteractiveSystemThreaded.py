@@ -14,7 +14,7 @@ import math
 import traceback
 import imutils
 from collections import deque
-from FaceAnalyzer import FaceAnalyzer
+from FaceAnalyzerThreaded import FaceAnalyzer
 import StateManager
 from transitions import Machine
 import time
@@ -43,13 +43,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     video_getter = VideoGet(source).start()
     video_shower = VideoShow(video_getter.frame).start()
 
-    face_analyzer = FaceAnalyzer(None, 
-                            None,
-                            identify_faces=False,
-                            detect_ages=False,
-                            detect_emotions=True,
-                            detect_genders=False,
-                            face_detection_upscales=0)
+    face_analyzer = FaceAnalyzer().start()
 
     bg = cv2.imread('Slides/Diapositiva1.png')
     bg = cv2.resize(bg,(3840,2160))
@@ -77,14 +71,18 @@ def runThreads(source=0, FiniteStateMachine = None):
             start = time.time()
             try:
                 print("\n----------------------------------Setting frame analyzer frame to frame")
-                detections = face_analyzer.analyze_frame(frame)
+                frame_analyzer.frame = frame
+                detections = frame_analyzer.detections
+                print(detections)
             except Exception:
                 traceback.print_exc()
                 continue
-        frame = utils.draw_bounding_boxes(detections, frame, (255,0,0))
+            # print("Done in %s seconds" % (time.time() - start_time))
+
         frame = utils.overlay_transparent(bg, frame,0,0)
         # sets frame in VideoShow frame
         video_shower.frame = frame
+
 
 
 def main():

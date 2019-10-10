@@ -14,12 +14,14 @@ class Smile(object):
         self.smiles = 0
         self.max_wait = 1
         self.message = False
+        self.bg_image = "Diapositiva1.png"
 
     # gets True if number of detected people in fron of the camera is >= 1
     def have_people(self): 
         return self.people
     
     def dont_have_people(self):
+        self.bg_image = "Diapositiva2.png"
         return not self.people
     
     # gets True if waiting time is over
@@ -52,14 +54,14 @@ class Smile(object):
 
     # show message on screen
     def show_message(self):
-        print("\n++++++++++++MESSAGE \n")
+        print("++++++++++++MESSAGE")
         self.message = True
 
     # show atracting message on screen
     def show_image(self):
         happyImage = cv2.imread('./Slides/happy.jpg')
         cv2.imshow("happy", happyImage)
-        print("\n--------------IMAGE \n")
+        print("--------------IMAGE")
         self.message = True
 
     # returns TRue if message alrady shopwn
@@ -68,7 +70,8 @@ class Smile(object):
 
     # prints stats 
     def stats(self): 
-        print('It took you some seconds')
+        #print('It took you some seconds')
+        a=0
 
 states=['start', 'have_people', 'show_message', 'wait_smiles', 'show_message', 'end']
 

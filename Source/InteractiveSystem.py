@@ -51,11 +51,16 @@ def runThreads(source=0, FiniteStateMachine = None):
                             detect_genders=False,
                             face_detection_upscales=0)
 
-    bg = cv2.imread('Slides/Diapositiva1.png')
-    bg = cv2.resize(bg,(3840,2160))
+    bg_images = {}
+    for i, state in enumerate(StateManager.states):
+        bg = cv2.imread(f'Slides/Diapositiva{i%5+1}.png')
+        bg_images[state] = cv2.resize(bg,(3840,2160))
 
     start = time.time()
-    period = 10.0 / 30.0
+    period = 0.3
+    people = 0
+    smiles = 0
+    prev_state = FiniteStateMachine.state
 
     while True:
         if video_getter.stopped or video_shower.stopped:
@@ -65,8 +70,13 @@ def runThreads(source=0, FiniteStateMachine = None):
 
         # if defined a FSM then evolve states and returns current state
         if FiniteStateMachine is not None:
-            FiniteStateMachine.next()
+            FiniteStateMachine.next(smiles=smiles, people=people)
             FSM_state = FiniteStateMachine.state
+            if prev_state != FSM_state:
+                print(f"New State {FSM_state} with people={people} and smiles={smiles}")
+                prev_state = FSM_state
+
+            bg = bg_images[FSM_state]
         
         # gets frame from VideoGet thread
         frame = video_getter.frame
@@ -76,8 +86,14 @@ def runThreads(source=0, FiniteStateMachine = None):
         if (time.time() - start) > period:
             start = time.time()
             try:
-                print("\n----------------------------------Setting frame analyzer frame to frame")
+                print("-------------Analyzing frame")
                 detections = face_analyzer.analyze_frame(frame)
+                # print(detections)
+                people = utils.get_people(detections)
+                if people > 0:
+                    smiles = utils.get_happiness(detections)/people
+                else:
+                    smiles = 0
             except Exception:
                 traceback.print_exc()
                 continue
@@ -90,8 +106,9 @@ def runThreads(source=0, FiniteStateMachine = None):
 def main():
     smile = StateManager.Smile()
     fsm = Machine(smile, 
-                states = StateManager.states, 
-                transitions = StateManager.transitions,
+                states = StateManager.states2, 
+                transitions = StateManager.transitions2,
+                send_event=True,
                 initial="start")
     runThreads(source=0,FiniteStateMachine=smile )
   

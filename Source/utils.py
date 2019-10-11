@@ -4,6 +4,7 @@ import logging
 import sys
 import time
 import cv2
+import math
 import numpy as np
 
 from __init__ import DEFAULT_LOGGING_LEVEL
@@ -96,3 +97,13 @@ def overlay_transparent(background, overlay, x, y):
     background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
 
     return background
+
+def get_happiness(detections = None):
+    happiness = 0
+    for face in detections["analyzed_faces"]:
+        if "emotions" in face and face["emotions"] is not None:
+            happiness += int(math.ceil(face["emotions"]["happy"] * 10))
+    return happiness
+
+def get_people(detections = None):
+    return len(detections["analyzed_faces"])

@@ -4,6 +4,7 @@ import logging
 import sys
 import time
 import cv2
+import math
 import numpy as np
 
 from __init__ import DEFAULT_LOGGING_LEVEL
@@ -101,7 +102,7 @@ def get_happiness(detections = None):
     happiness = 0
     for face in detections["analyzed_faces"]:
         if "emotions" in face and face["emotions"] is not None:
-            hapiness += int(math.ceil(face["emotions"][_label] * 10))
+            happiness += int(math.ceil(face["emotions"]["happy"] * 10))
     return happiness
 
 def get_people(detections = None):

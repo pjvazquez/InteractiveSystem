@@ -12,7 +12,7 @@ class Smile(object):
         self.attempts = 0
         self.people = 0
         self.smiles = 0
-        self.max_wait = 1
+        self.max_wait = 10
         self.message = False
         self.frame = frame
 
@@ -33,6 +33,7 @@ class Smile(object):
         init_time = time()
         while not self.elapsed_time:
             elapsed = time()-init_time
+            print(elapsed)
             if elapsed >= self.max_wait:
                 self.elapsed_time = True
     
@@ -54,12 +55,12 @@ class Smile(object):
     # show message on screen
     def show_message(self, frame):
         cv2.imshow("Cap: " , frame)
-        print("\n\n\n MESSAGE \n\n\n")
+        print("MESSAGE --------------------------")
         self.message = True
 
     # show atracting message on screen
     def show_image(self,frame):
-        print("\n\n\n IMAGE \n\n\n")
+        print("IMAGE ---------------------------")
         self.message = True
 
     # returns TRue if message alrady shopwn
@@ -68,7 +69,8 @@ class Smile(object):
 
     # prints stats 
     def stats(self, frame): 
-        print('It took you some seconds')
+        #print('It took you some seconds')
+        a = 0
 
 states=['start', 'have_people', 'show_message', 'end']
 
@@ -85,8 +87,8 @@ transitions = [
         'trigger': 'next', 
         'source': 'show_message', 
         'dest': 'end', 
-        'prepare': ['show_message'], 
-        'conditions': 'message_shown', 
+        'prepare': ['show_message', 'wait_time'], 
+        'conditions': 'time_elapsed', 
         'after': 'stats'
         },
     { 
@@ -155,18 +157,17 @@ if __name__ == "__main__":
     '''
         Here is the code related with finite state machine
     '''
+    FSMdata = {''}
     smile_ = Smile()
-    machine = Machine(smile_, states, transitions=transitions, initial='start')
+    machine = Machine(smile_, states, transitions=transitions, send_event=True, initial='start')
 
     while True:
         ret, frame = vcap.read()
         frame = imutils.resize(frame, width=width, height=height)  # resize frame
 
-        smile_.next(frame = frame)
+        smile_.next(data)
+
         print(smile_.state, smile_.are_smiling(frame))
-
-
-        # cv2.imshow("Cap: " + str(video_device_id), frame)
 
         # if tk gui is being shown, exit by keyword press
         if cv2.waitKey(1) & 0xFF == ord('q'):

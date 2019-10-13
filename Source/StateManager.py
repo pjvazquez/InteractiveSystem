@@ -83,7 +83,7 @@ class Smile(object):
     # sets language in random 
     def set_language(self, event): 
         self.language = random.randint(0,2)
-        logger.info('set language to: ' self.language)
+        logger.info('set language to: ', self.language)
 
 states=['start', 
         'initial',

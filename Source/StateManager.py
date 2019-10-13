@@ -168,7 +168,7 @@ transitions = [
         'conditions': ['message_shown', 'elapsed_time'], 
         'after': 'set_bg'
         },
-    { ~# end state transition to initial state
+    { # end state transition to initial state
         'trigger': 'next', 
         'source': 'end', 
         'dest': 'initial', 

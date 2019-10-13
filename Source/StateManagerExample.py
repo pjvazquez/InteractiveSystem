@@ -14,81 +14,79 @@ class Smile(object):
         self.smiles = 0
         self.max_wait = 10
         self.message = False
-        self.frame = frame
 
     # gets True if number of detected people in fron of the camera is >= 1
-    def have_people(self, frame): 
+    def have_people(self, event): 
         return self.people
     
-    def dont_have_people(self, frame):
+    def dont_have_people(self, event):
         return not self.people
     
     # gets True if waiting time is over
-    def time_elapsed(self, frame): 
+    def time_elapsed(self, event): 
         return self.elapsed_time
     
     # computes elapsed time and sets elapsed_time True
-    def wait_time(self, frame): 
+    def wait_time(self, event): 
         elapsed_time = False
         init_time = time()
         while not self.elapsed_time:
             elapsed = time()-init_time
-            print(elapsed)
+            # print(elapsed)
             if elapsed >= self.max_wait:
                 self.elapsed_time = True
     
     # count number of people in front of the camera
     # sets people = True if number of people > 1
-    def count_people(self, frame):
+    def count_people(self, event):
         while not self.people:
-            self.people = random.random() * 10 > 1
+            print("wainting people-------")
     
     # counts number of smiles and sets smiles = True if more than... 1
-    def make_smile(self, frame):
+    def make_smile(self, event):
         while not self.smiles:
-            self.smiles = random.random() * 10 > 1
+            print("making smiles --------")
     
     # returns True if people is smiling
-    def are_smiling(self, frame):
+    def are_smiling(self, event):
         return self.smiles
 
     # show message on screen
-    def show_message(self, frame):
-        cv2.imshow("Cap: " , frame)
+    def show_message(self, event):
         print("MESSAGE --------------------------")
         self.message = True
 
     # show atracting message on screen
-    def show_image(self,frame):
+    def show_image(self,event):
         print("IMAGE ---------------------------")
         self.message = True
 
     # returns TRue if message alrady shopwn
-    def message_shown(self, frame):
+    def message_shown(self, event):
         return self.message
 
     # prints stats 
-    def stats(self, frame): 
+    def stats(self, event): 
         #print('It took you some seconds')
-        a = 0
+        self.elapsed_time = False
 
-states=['start', 'have_people', 'show_message', 'end']
+states=['start', 'have_people', 'end']
 
 transitions = [
     { 
         'trigger': 'next', 
         'source': 'start', 
-        'dest': 'show_message', 
+        'dest': 'have_people', 
         'prepare': ['wait_time'], 
         'conditions': 'time_elapsed', 
         'after': 'stats'
         },
     { 
         'trigger': 'next', 
-        'source': 'show_message', 
+        'source': 'have_people', 
         'dest': 'end', 
-        'prepare': ['show_message', 'wait_time'], 
-        'conditions': 'time_elapsed', 
+        'prepare': ['count_people', 'wait_time'], 
+        'conditions': ['have_people','time_elapsed'], 
         'after': 'stats'
         },
     { 
@@ -158,7 +156,11 @@ def main():
     '''
     FSMdata = {''}
     smile_ = Smile()
-    machine = Machine(smile_, states, transitions=transitions, send_event=True, initial='start')
+    machine = Machine(smile_, 
+                    states=states, 
+                    transitions=transitions, 
+                    send_event=True, 
+                    initial='start')
 
     while True:
         ret, frame = vcap.read()
@@ -176,23 +178,17 @@ def main():
 
 def main2():
     smile_ = Smile()
-    machine = Machine(smile_, states, transitions=transitions, initial='start')
+    machine = Machine(smile_, 
+                    states=states, 
+                    transitions=transitions, 
+                    send_event=True, 
+                    initial='start')
 
-    while True:
-        ret, frame = vcap.read()
-        frame = imutils.resize(frame, width=width, height=height)  # resize frame
-
-        smile_.next(frame = frame)
-        print(smile_.state, smile_.are_smiling(frame))
-
-
-        # cv2.imshow("Cap: " + str(video_device_id), frame)
-
-        # if tk gui is being shown, exit by keyword press
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
-
+    for i in range(10):
+        people = int(i%2.0)
+        smiles = int(i%2.0)
+        print(smile_.state, people, smiles)
+        smile_.next()
 
 
 if __name__ == "__main__":

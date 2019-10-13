@@ -12,10 +12,13 @@ from __init__ import DEFAULT_LOGGING_LEVEL
 
 def get_logger(name, level=DEFAULT_LOGGING_LEVEL):
 
+    from datetime import datetime
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
     ch = logging.StreamHandler(sys.stdout)
+    # ch = logging.FileHandler(F'interactiveSystem_{datetime.now()}.log')
     # TODO: use a rotatingFileHandler in the deployment mode
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -42,16 +45,22 @@ def timeit(method):
 
 
 def draw_bounding_box(_face_coordinates, image_array, color):
-    _face_coordinates = (
-        _face_coordinates["x"], _face_coordinates["y"], _face_coordinates["h"], _face_coordinates["w"])
-    x, y, w, h = _face_coordinates
-    cv2.rectangle(image_array, (x, y), (x + w, y + h), color, 2)
+    try:
+        _face_coordinates = (
+            _face_coordinates["x"], _face_coordinates["y"], _face_coordinates["h"], _face_coordinates["w"])
+        x, y, w, h = _face_coordinates
+        cv2.rectangle(image_array, (x, y), (x + w, y + h), color, 2)
+    except Exception:
+        print(Exception)
 
 def draw_bounding_boxes(detections, frame, color):
-    for face in detections["analyzed_faces"]:
-        face_coordinates = face["coordinates"]
-        draw_bounding_box(face_coordinates, frame, color)
-    
+    try:
+        for face in detections["analyzed_faces"]:
+            face_coordinates = face["coordinates"]
+            draw_bounding_box(face_coordinates, frame, color)
+    except Exception:
+        print(Exception)
+
     return frame
 
 

@@ -1,138 +1,180 @@
 from transitions import Machine
-import random
-import cv2
 from time import time
+from utils import get_logger
+import random
 
+
+logger = get_logger(__name__)
 
 # TODO: must use declaration variables to avoid initial internal declaration
 class Smile(object):
     def __init__(self):
         self.heat = False
-        self.elapsed_time = False
+        self.time_elapsed = False
         self.attempts = 0
         self.people = 0
         self.smiles = 0
-        self.max_wait = 1
+        self.max_wait = 3
         self.message = False
-        self.bg_image = "Diapositiva1.png"
+        self.language = 0 # 0: cast, 1: port, 2: galego
+        self.bg_image = []
 
-    # gets True if number of detected people in fron of the camera is >= 1
+    # returns True if number of detected people in fron of the camera is >= 1
     def have_people(self, event): 
-        return self.people
-    
+        if self.people >= 1:
+            return True
+        else:
+            return False
+
+    # returns False if number of people < 1
     def dont_have_people(self, event):
-        self.bg_image = "Diapositiva2.png"
-        return not self.people
+        if self.people < 1:
+            return True
+        else:
+            return False
     
     # gets True if waiting time is over
-    def time_elapsed(self, event): 
-        return self.elapsed_time
+    def elapsed_time(self, event): 
+        return self.time_elapsed
     
     # computes elapsed time and sets elapsed_time True
     def wait_time(self, event): 
-        elapsed_time = False
+        logger.info("waiting time---------")
+        self.time_elapsed = False
         init_time = time()
-        while not self.elapsed_time:
+        while not self.time_elapsed:
             elapsed = time()-init_time
             if elapsed >= self.max_wait:
-                self.elapsed_time = True
+                self.time_elapsed = True
+                logger.info("time elapsed--------------")
     
-    # count number of people in front of the camera
-    # sets people = True if number of people > 1
+    # get number of people in front of the camera
+    
     def count_people(self, event):
-        while not self.people:
-            self.people = random.random() * 10 > 1
+        self.people = event.kwargs.get('people')
     
     # counts number of smiles and sets smiles = True if more than... 1
-    def make_smile(self, event):
-        print('SMILE++++')
+    def count_smile(self, event):
+        self.smiles = event.kwargs.get('smiles')
+        logger.info(F"MAKE SMILE++++{self.smiles}")
     
     # returns True if people is smiling
     def are_smiling(self, event):
-        return self.smiles
+        logger.info("checks if they are smiling .... ")
+        if self.smiles > 1:
+            return True
+        else:
+            return False
 
     # show message on screen
     def show_message(self, event):
-        print("++++++++++++MESSAGE")
+        logger.info("++++++++++++MESSAGE")
         self.message = True
 
     # show atracting message on screen
-    def show_image(self, event):
-        happyImage = cv2.imread('./Slides/happy.jpg')
-        cv2.imshow("happy", happyImage)
-        print("--------------IMAGE")
-        self.message = True
+    def set_bg(self, event):
+        logger.info("-----------------------------sets background image")
+        self.bg_image = random.randint(0,3)
 
     # returns TRue if message alrady shopwn
     def message_shown(self, event):
         return self.message
 
-    # prints stats 
-    def stats(self, event): 
-        #print('It took you some seconds')
-        a=0
+    # sets language in random 
+    def set_language(self, event): 
+        self.language = random.randint(0,2)
+        logger.info('set language to: ' self.language)
 
-states=['start', 'have_people', 'show_message', 'wait_smiles', 'show_message', 'end']
+states=['start', 
+        'initial',
+        'have_people', 
+        'get_people', 
+        'have_smiles', 
+        'get_smiles',
+        'show_message', 
+        'end']
+
 
 states2=['start', 'wait_smiles', 'end']
 
 
 transitions = [
-    { 
+    { # start state transition to initial, nothing to do except preparing
         'trigger': 'next', 
         'source': 'start', 
+        'dest': 'initial', 
+        'prepare': ['wait_time'], 
+        'conditions': 'elapsed_time', 
+        'after': 'set_bg'
+        },
+    { # initial state transition to have_people, wait a bit until next one, set language (0,2)
+        'trigger': 'next', 
+        'source': 'initial', 
         'dest': 'have_people', 
         'prepare': ['wait_time'], 
-        'conditions': 'time_elapsed', 
-        'after': 'stats'
+        'conditions': 'elapsed_time', 
+        'before': ['set_language'],
+        'after': 'set_bg'
         },
-    { 
+    { # have_people state transition to have smiles if we have people and after 3 seconds 
         'trigger': 'next', 
         'source': 'have_people', 
-        'dest': 'wait_smiles', 
+        'dest': 'have_smiles', 
         'prepare': ['count_people', 'wait_time'], 
-        'conditions': 'have_people', 
-        'after': 'stats'
+        'conditions': ['have_people', 'elapsed_time'], 
+        'after': 'set_bg'
         },
-    { 
+    { # have_people state transition to get_people
         'trigger': 'next', 
         'source': 'have_people', 
-        'dest': 'show_something', 
+        'dest': 'get_people', 
         'prepare': ['count_people', 'wait_time'], 
-        'conditions': 'dont_have_people', 
-        'after': 'stats'
+        'conditions': ['dont_have_people', 'elapsed_time'], 
+        'after': 'set_bg'
         },
-    { 
+    { # get_people state transition to have_people, changing bg image
         'trigger': 'next', 
-        'source': 'show_something', 
+        'source': 'get_people', 
         'dest': 'have_people', 
-        'prepare': ['show_image', 'wait_time'], 
-        'conditions': 'have_people', 
-        'after': 'stats'
+        'after': 'set_bg'
         },
-    { 
+    { # have_smiles state transition to get_smiles
         'trigger': 'next', 
-        'source': 'wait_smiles', 
-        'dest': 'show_message', 
-        'prepare': ['make_smile', 'wait_time'], 
-        'conditions': 'are_smiling', 
-        'after': 'stats'
+        'source': 'have_smiles', 
+        'dest': 'get_smiles', 
+        'prepare': ['count_smiles', 'wait_time'], 
+        'conditions': ['are_not_smiling', 'elapsed_time'], 
+        'after': 'set_bg'
         },
-    { 
+    { # have_smiles state transition to show_message
+        'trigger': 'next', 
+        'source': 'have_smiles', 
+        'dest': 'show_message', 
+        'prepare': ['wait_time','count_smiles'], 
+        'conditions': ['are_smiling','elapsed_time'], 
+        'after': 'set_bg'
+        },
+    { # get_smiles state transition to have_smiles
+        'trigger': 'next', 
+        'source': 'get_smiles', 
+        'dest': 'have_smiles', 
+        'after': 'set_bg'
+        },
+    { # show_message state tranmsition to end
         'trigger': 'next', 
         'source': 'show_message', 
         'dest': 'end', 
         'prepare': ['show_message', 'wait_time'], 
-        'conditions': ['message_shown'], 
-        'after': 'stats'
+        'conditions': ['message_shown', 'elapsed_time'], 
+        'after': 'set_bg'
         },
-    { 
+    { ~# end state transition to initial state
         'trigger': 'next', 
         'source': 'end', 
-        'dest': 'start', 
+        'dest': 'initial', 
         'prepare': ['wait_time'], 
         'conditions': 'time_elapsed', 
-        'after': 'stats'
+        'after': 'set_bg'
         },
 ]
 

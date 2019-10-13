@@ -142,8 +142,9 @@ class FaceAnalyzer:
 
     def process_frame(self, task):
         results = self.analyze_frame(task.image)
-        if self.aggregator:
-            self.aggregator.add((task, results))
+        # sets process task equal to analyze frame result
+        task.result = results
+
 
 
 if __name__ == "__main__":

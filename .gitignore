@@ -1,3 +1,5 @@
 Models
 Source/__pychache__
 .vscode
+*.pyc
+*.*.pyc

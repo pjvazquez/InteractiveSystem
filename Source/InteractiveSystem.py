@@ -9,7 +9,7 @@ from __init__ import VERSION
 from utils import get_logger
 import FaceAnalyzer as fa
 from VideoGet import VideoGet
-from VideoShowNT import VideoShow
+from VideoShow import VideoShow
 import math
 import traceback
 import imutils
@@ -44,23 +44,11 @@ def runThreads(source=0, FiniteStateMachine = None):
     # stack to register last 10 emotions (5 seconds?????)
     faceStack = deque(maxlen = 10)
 
+    logger.info("Start video getter -----------------------")
     video_getter = VideoGet(source).start()
-    cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
-    cv2.moveWindow("Video",3000,0)
-    cv2.setWindowProperty("Video",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-#    video_shower = VideoShow(video_getter.frame).start()
+    logger.info("Creates video window -----------------------")
+    video_shower = VideoShow(video_getter.frame).start()
     logger.info("Initiated Video get and video show threads")
-
-    # instead of this, we arer going to use an independent process
-    '''
-    face_analyzer = FaceAnalyzer(None, 
-                            None,
-                            identify_faces=False,
-                            detect_ages=False,
-                            detect_emotions=True,
-                            detect_genders=False,
-                            face_detection_upscales=0)
-    '''
 
     work_manager = TaskManager(conf)
     logger.info("Instantiated Task Manager")
@@ -69,15 +57,10 @@ def runThreads(source=0, FiniteStateMachine = None):
 
     # loads into a dictionary all images we are going to use
     # each state has its own images
-    '''
-    bg_images = {}
-    for i, state in enumerate(StateManager.states):
-        bg = cv2.imread(f'Slides/Diapositiva{i%5+1}.png')
-        bg_images[state] = cv2.resize(bg,(3840,2160))
-    '''
     getimages = GetImages('states2')
     bg_images = getimages.generateImageDict()
-    logger.info(bg_images)
+    logger.info("LOaded background images----------------------")
+
     start = time.time()
     period = 0.3
     people = 0
@@ -85,8 +68,8 @@ def runThreads(source=0, FiniteStateMachine = None):
     prev_state = FiniteStateMachine.state
 
     while True:
-        if video_getter.stopped: # or video_shower.stopped:
-            # video_shower.stop()
+        if video_getter.stopped or video_shower.stopped:
+            video_shower.stop()
             video_getter.stop()
             work_manager.stop()
             break
@@ -102,37 +85,44 @@ def runThreads(source=0, FiniteStateMachine = None):
             bg = bg_images[FSM_state]
 
         # gets frame from VideoGet thread
-        frame = video_getter.frame
         # process frame in principal thread
+        frame = video_getter.frame
 
-        # is this frame nedded to be processed?
+        # it is not possible to analyze all frames, so we'll peek 
+        # one frame each .3 seconds or so (3.3 frames/sec)
         if (time.time() - start) > period:
             start = time.time()
             try:
                 logger.info("-------------Analyzing frame")
+                num = 0
                 task = ImagePredictionTask(image=frame,result="", time=start, operation='faces')
                 logger.info("-------------creates task")
                 work_manager.enqueue(task)
                 logger.info("-------------put task in queue")
                 # using TaskManger to try to use anotehr process for image processing
-                detections = (work_manager.dequeue()).result
-                logger.info(F"Got result from out queue: {detections}")
-                if detections is not None:
+                if work_manager.dequeue() is not None:
+                    detections = (work_manager.dequeue()).result
+                    logger.info(F"Got result from out queue: {detections}")
                     people = utils.get_people(detections)
                     if people > 0:
                         smiles = utils.get_happiness(detections)/people
                     else:
                         smiles = 0
+                else:
+                    detections = None
 
             except Exception as err:
                 traceback.print_exc()
                 logger.exception(F"A problem while in loop: {err}" )
                 continue
-        #frame = utils.draw_bounding_boxes(detections, frame, (255,0,0))
+        
+        logger.info("Show result in Video Window-----------------------")
+        if detections is not None:
+            frame = utils.draw_bounding_boxes(detections, frame, (255,0,0))
         frame = utils.overlay_transparent(bg, frame,0,0)
         # sets frame in VideoShow frame
-        # video_shower.frame = frame
-        cv2.imshow("Video", frame)
+        video_shower.frame = frame
+        # cv2.imshow("Video", frame)
 
 
 def main():

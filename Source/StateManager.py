@@ -14,7 +14,7 @@ class Smile(object):
         self.attempts = 0
         self.people = 0
         self.smiles = 0
-        self.max_wait = 3
+        self.max_wait = 0.5
         self.message = False
         self.language = 0 # 0: cast, 1: port, 2: galego
         self.bg_image = []
@@ -54,7 +54,7 @@ class Smile(object):
         self.people = event.kwargs.get('people')
     
     # counts number of smiles and sets smiles = True if more than... 1
-    def count_smile(self, event):
+    def count_smiles(self, event):
         self.smiles = event.kwargs.get('smiles')
         logger.info(F"MAKE SMILE++++{self.smiles}")
     
@@ -173,7 +173,7 @@ transitions = [
         'source': 'end', 
         'dest': 'initial', 
         'prepare': ['wait_time'], 
-        'conditions': 'time_elapsed', 
+        'conditions': 'elapsed_time', 
         'after': 'set_bg'
         },
 ]
@@ -184,23 +184,23 @@ transitions2 = [
         'source': 'start', 
         'dest': 'wait_smiles', 
         'prepare': ['wait_time'], 
-        'conditions': 'time_elapsed', 
-        'after': 'stats'
+        'conditions': 'elapsed_time', 
+        'after': 'set_bg'
         },
     { 
         'trigger': 'next', 
         'source': 'wait_smiles', 
         'dest': 'end', 
-        'prepare': ['make_smile'], 
+        'prepare': ['count_smiles'], 
         'conditions': 'are_smiling', 
-        'after': 'stats'
+        'after': 'set_bg'
         },
     { 
         'trigger': 'next', 
         'source': 'end', 
         'dest': 'start', 
         'prepare': ['wait_time'], 
-        'conditions': 'time_elapsed', 
-        'after': 'stats'
+        'conditions': 'elapsed_time', 
+        'after': 'set_bg'
         },
 ]

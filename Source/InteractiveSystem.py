@@ -21,6 +21,7 @@ import time
 import utils
 from TaskManager import TaskManager, ImagePredictionTask
 from multiprocessing import Queue
+from GetImages import GetImages
 
 logger = get_logger(__name__)
 
@@ -30,6 +31,7 @@ with open("./Config/application.conf", "r") as confFile:
     conf = json.loads(confFile.read())
 
 # happiness_threshold = conf('happiness_threshold')
+image_path = conf['image_path']
 
 def runThreads(source=0, FiniteStateMachine = None):
     """
@@ -64,11 +66,15 @@ def runThreads(source=0, FiniteStateMachine = None):
 
     # loads into a dictionary all images we are going to use
     # each state has its own images
+    '''
     bg_images = {}
     for i, state in enumerate(StateManager.states):
         bg = cv2.imread(f'Slides/Diapositiva{i%5+1}.png')
         bg_images[state] = cv2.resize(bg,(3840,2160))
-
+    '''
+    getimages = GetImages('states2')
+    bg_images = getimages.generateImageDict()
+    logger.info(bg_images)
     start = time.time()
     period = 0.3
     people = 0
@@ -89,7 +95,7 @@ def runThreads(source=0, FiniteStateMachine = None):
             if prev_state != FSM_state:
                 logger.info(f"New State {FSM_state} with people={people} and smiles={smiles}")
                 prev_state = FSM_state
-
+            # get image from bg dictionary
             bg = bg_images[FSM_state]
 
         # gets frame from VideoGet thread
@@ -107,16 +113,17 @@ def runThreads(source=0, FiniteStateMachine = None):
                 logger.info("-------------put task in queue")
                 # using TaskManger to try to use anotehr process for image processing
                 detections = (work_manager.dequeue()).result
-                logger.info(F"got result from out queue: {detections}")
-                people = utils.get_people(detections)
-                if people > 0:
-                    smiles = utils.get_happiness(detections)/people
-                else:
-                    smiles = 0
+                logger.info(F"Got result from out queue: {detections}")
+                if detections is not None:
+                    people = utils.get_people(detections)
+                    if people > 0:
+                        smiles = utils.get_happiness(detections)/people
+                    else:
+                        smiles = 0
 
-            except Exception:
+            except Exception as err:
                 traceback.print_exc()
-                logger.exception("A problem whike in loop")
+                logger.exception(F"A problem while in loop: {err}" )
                 continue
         #frame = utils.draw_bounding_boxes(detections, frame, (255,0,0))
         frame = utils.overlay_transparent(bg, frame,0,0)

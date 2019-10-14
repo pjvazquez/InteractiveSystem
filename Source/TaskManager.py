@@ -52,7 +52,7 @@ class TaskManager:
 
         # noinspection PyBroadException
         try:
-            logger.info("Processing frame")
+            logger.info("Processing frame --------------------------------------")
             self.face_analyzer.process_frame(task)
         except Exception:
             logger.exception("Task failed to be procesed: " + str(task))
@@ -103,9 +103,15 @@ class TaskManager:
     def dequeue(self):
         # is it needed
         # do I need a function to get last out element?
-        if self.outqueue.qsize() == 0:
-            return None
-        else:
+        # In MAC OS qsize() rises a Non Implemented Error
+        try:
+            if self.outqueue.qsize() == 0:
+                return None
+            else:
+                detections = self.outqueue.get()
+                logger.info(F"Task result from queue: {detections}")
+                return detections
+        except NotImplementedError:
             detections = self.outqueue.get()
             logger.info(F"Task result from queue: {detections}")
             return detections

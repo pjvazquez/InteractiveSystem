@@ -1,13 +1,13 @@
 # coding=utf-8
-import time
 
+import time
 import cv2
 import dlib
 import numpy as np
 from imutils.face_utils import FaceAligner
 import imutils
-
 from utils import get_logger
+from TaskManager import ImagePredictionTask
 
 logger = get_logger(__name__)
 
@@ -92,7 +92,9 @@ class FaceAnalyzer:
         -------
         analyze_faces : function
         """
+        logger.info(F"Process detect faces to catch all faces in image-- in frame with shape: {rgb_frame.shape}")
         detected_faces, aligned_faces = self.face_detector.detect_faces(rgb_frame, self.face_detection_upscales)
+        logger.info("Process analyze faces to extract faces info")
         return self.analyze_faces(detected_faces, aligned_faces)
 
     def analyze_faces(self, detected_faces, aligned_faces):
@@ -141,6 +143,7 @@ class FaceAnalyzer:
         }
 
     def process_frame(self, task):
+        logger.info("Processing Frame---")
         results = self.analyze_frame(task.image)
         # sets process task equal to analyze frame result
         task.result = results
@@ -252,7 +255,11 @@ if __name__ == "__main__":
 
             start_time = time.time()
             try:
-                detections = processor.analyze_frame(frame)
+                task = ImagePredictionTask(image=frame,result="", time=start, operation='faces')
+                processor.process_frame(task)
+                print(task.result)
+                detections = task.result
+                # detections = processor.analyze_frame(frame)
             except Exception:
                 traceback.print_exc()
                 continue

@@ -7,11 +7,12 @@ class VideoGet:
     with a dedicated thread.
     """
 
-    def __init__(self, src=0):
+    def __init__(self, src=0, cameraRes=(640,480)):
+        # cameraRes is w:19020, h:1080 for linux cam
         self.stream = cv2.VideoCapture(src)
         # set device parameters
-        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, cameraRes[0])
+        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, cameraRes[1])
         self.stream.set(cv2.CAP_PROP_FPS, 30)
 
         (self.grabbed, self.frame) = self.stream.read()

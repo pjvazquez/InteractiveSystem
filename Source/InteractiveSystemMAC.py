@@ -18,7 +18,7 @@ import StateManager
 from transitions import Machine
 import time
 from TaskManager import TaskManager, ImagePredictionTask
-from multiprocessing import Queue
+from multiprocessing import Queue, Manager, Process
 from GetImages import GetImages
 
 from __init__ import VERSION
@@ -53,7 +53,11 @@ def runThreads(source=0, FiniteStateMachine = None):
     cv2.imshow("Video",frame)
     logger.info("Initiated Video get and video show threads")
 
-    work_manager = TaskManager(conf)
+    # new way to pass queues to process
+    manager = Manager()
+    inqueue = manager.Queue()
+    outqueue = manager.Queue()
+    work_manager = TaskManager(conf,inqueue, outqueue)
     logger.info("Instantiated Task Manager")
     work_manager.start()
     logger.info("initiated task manager")
@@ -69,6 +73,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     people = 0
     smiles = 0
     prev_state = FiniteStateMachine.state
+    detections = None
 
     while True:
         if (cv2.waitKey(1) == ord("q")) or video_getter.stopped:
@@ -98,10 +103,12 @@ def runThreads(source=0, FiniteStateMachine = None):
                 logger.info("-------------Analyzing frame")
                 task = ImagePredictionTask(image=frame,result="", time=start, operation='faces')
                 logger.info("-------------creates task")
-                work_manager.enqueue(task)
-                logger.info("-------------put task in queue")
+                inqueue.put(task)
+                # work_manager.enqueue(task)
+                logger.info(F"-------------put task in queue of length {inqueue.qsize()}")
                 # using TaskManger to try to use anotehr process for image processing
-                detections = (work_manager.dequeue()).result
+                # detections = (work_manager.dequeue()).result
+                detections = outqueue.get()
                 if detections is not None:
                     logger.info(F"Got result from out queue: {detections}")
                     people = get_people(detections)

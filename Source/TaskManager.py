@@ -1,6 +1,6 @@
 # coding=utf-8
 import time
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Manager
 
 from Aggregator import Aggregator
 from utils import get_logger
@@ -23,10 +23,11 @@ class ImagePredictionTask:
                f"gputask:{self.is_gpu_task}"
 
 
-class TaskManager:
-    def __init__(self, conf):
-        self.inqueue = Queue()
-        self.outqueue = Queue()
+class TaskManager(Process):
+    def __init__(self, conf,inqueue, outqueue):
+        super(TaskManager, self).__init__()
+        self.inqueue = inqueue
+        self.outqueue = outqueue
         self.NUMBER_OF_PROCESSES = 1
         self.workers = []
         self.conf = conf

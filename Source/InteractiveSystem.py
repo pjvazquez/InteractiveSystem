@@ -9,7 +9,7 @@ from __init__ import VERSION
 from utils import get_logger
 import FaceAnalyzer as fa
 from VideoGet import VideoGet
-from VideoShow import VideoShow
+from VideoShowNT import VideoShow
 import math
 import traceback
 import imutils
@@ -45,7 +45,10 @@ def runThreads(source=0, FiniteStateMachine = None):
     faceStack = deque(maxlen = 10)
 
     video_getter = VideoGet(source).start()
-    video_shower = VideoShow(video_getter.frame).start()
+    cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
+    cv2.moveWindow("Video",3000,0)
+    cv2.setWindowProperty("Video",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
+#    video_shower = VideoShow(video_getter.frame).start()
     logger.info("Initiated Video get and video show threads")
 
     # instead of this, we arer going to use an independent process
@@ -82,8 +85,8 @@ def runThreads(source=0, FiniteStateMachine = None):
     prev_state = FiniteStateMachine.state
 
     while True:
-        if video_getter.stopped or video_shower.stopped:
-            video_shower.stop()
+        if video_getter.stopped: # or video_shower.stopped:
+            # video_shower.stop()
             video_getter.stop()
             work_manager.stop()
             break
@@ -128,7 +131,8 @@ def runThreads(source=0, FiniteStateMachine = None):
         #frame = utils.draw_bounding_boxes(detections, frame, (255,0,0))
         frame = utils.overlay_transparent(bg, frame,0,0)
         # sets frame in VideoShow frame
-        video_shower.frame = frame
+        # video_shower.frame = frame
+        cv2.imshow("Video", frame)
 
 
 def main():

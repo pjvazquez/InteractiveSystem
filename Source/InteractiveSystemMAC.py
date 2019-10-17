@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import cv2
+import ray
 import json
 import numpy as np
 from datetime import datetime
@@ -17,7 +18,7 @@ from FaceAnalyzer import FaceAnalyzer
 import StateManager
 from transitions import Machine
 import time
-from TaskManager import TaskManager, ImagePredictionTask
+from TaskManagerRemote import TaskManager, ImagePredictionTask
 from multiprocessing import Queue, Manager, Process
 from GetImages import GetImages
 
@@ -48,19 +49,15 @@ def runThreads(source=0, FiniteStateMachine = None):
     logger.info("Creates video window -- XXXXX NO THREAD ---------------------")
     cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
     # cv2.moveWindow("Video",3000,0)
-    # cv2.setWindowProperty("Video",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
+    cv2.setWindowProperty("Video",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
     frame = video_getter.frame
-    cv2.imshow("Video",frame)
+    # cv2.imshow("Video",frame)
     logger.info("Initiated Video get and video show threads")
 
-    # new way to pass queues to process
-    manager = Manager()
-    inqueue = manager.Queue()
-    outqueue = manager.Queue()
-    work_manager = TaskManager(conf,inqueue, outqueue)
+    # now using Ray library
+    work_manager = TaskManager.remote(conf)
+    work_manager.start.remote()
     logger.info("Instantiated Task Manager")
-    work_manager.start()
-    logger.info("initiated task manager")
 
     # loads into a dictionary all images we are going to use
     # each state has its own images
@@ -78,7 +75,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     while True:
         if (cv2.waitKey(1) == ord("q")) or video_getter.stopped:
             video_getter.stop()
-            work_manager.stop()
+            ray.shutdown()
             break
 
         # if defined a FSM then evolve states and returns current state
@@ -103,13 +100,15 @@ def runThreads(source=0, FiniteStateMachine = None):
                 logger.info("-------------Analyzing frame")
                 task = ImagePredictionTask(image=frame,result="", time=start, operation='faces')
                 logger.info("-------------creates task")
-                inqueue.put(task)
-                # work_manager.enqueue(task)
-                logger.info(F"-------------put task in queue of length {inqueue.qsize()}")
-                # using TaskManger to try to use anotehr process for image processing
-                # detections = (work_manager.dequeue()).result
-                detections = outqueue.get()
-                if detections is not None:
+                taskRemote = ray.put(task)
+                logger.info(F"-------------set task in remote")
+                taskRemote = work_manager.process_task.remote(taskRemote)
+                # get remote result
+                # taskRemote = work_manager.get_result.remote()
+                task = ray.get(taskRemote)
+                
+                if task is not None:
+                    detections = task.result
                     logger.info(F"Got result from out queue: {detections}")
                     people = get_people(detections)
                     if people > 0:
@@ -118,7 +117,6 @@ def runThreads(source=0, FiniteStateMachine = None):
                         smiles = 0
                 else:
                     detections = None
-
             except Exception as err:
                 traceback.print_exc()
                 logger.exception(F"A problem while in loop: {err}" )
@@ -133,6 +131,7 @@ def runThreads(source=0, FiniteStateMachine = None):
 
 
 def main():
+    ray.init()
     smile = StateManager.Smile()
     fsm = Machine(smile, 
                 states = StateManager.states2, 

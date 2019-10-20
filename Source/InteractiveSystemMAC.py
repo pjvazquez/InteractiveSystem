@@ -69,6 +69,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     period = 0.3
     people = 0
     smiles = 0
+    language = 0
     prev_state = FiniteStateMachine.state
     detections = None
 
@@ -81,6 +82,12 @@ def runThreads(source=0, FiniteStateMachine = None):
         # if defined a FSM then evolve states and returns current state
         if FiniteStateMachine is not None:
             FiniteStateMachine.next(smiles=smiles, people=people)
+            language = FiniteStateMachine.language
+            logger.info(f"FSM language set to {language}")
+
+            img_ = FiniteStateMachine.bg_image
+            logger.info(f"FSM image set to {img_}")
+            
             FSM_state = FiniteStateMachine.state
             if prev_state != FSM_state:
                 logger.info(f"New State {FSM_state} with people={people} and smiles={smiles}")

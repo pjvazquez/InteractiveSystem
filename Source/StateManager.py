@@ -2,9 +2,18 @@ from transitions import Machine
 from time import time
 from utils import get_logger
 import random
-
+import json
 
 logger = get_logger(__name__)
+
+with open("./Config/application.conf", "r") as confFile:
+    conf = json.load(confFile)
+with open("./Config/Images.conf", "r") as imgFile:
+    imgs = json.load(imgFile)
+'''
+with open("./Config/Sequence.conf", "r") as seqFile:
+    seq = json.load(seqFile)
+'''
 
 # TODO: must use declaration variables to avoid initial internal declaration
 class Smile(object):
@@ -14,10 +23,10 @@ class Smile(object):
         self.attempts = 0
         self.people = 0
         self.smiles = 0
-        self.max_wait = 0.5
+        self.max_wait = 2
         self.message = False
         self.language = 0 # 0: cast, 1: port, 2: galego
-        self.bg_image = []
+        self.bg_image = None
 
     # returns True if number of detected people in fron of the camera is >= 1
     def have_people(self, event): 
@@ -72,9 +81,15 @@ class Smile(object):
         self.message = True
 
     # show atracting message on screen
+    # SURE THIS DO NOT WORK
     def set_bg(self, event):
         logger.info("-----------------------------sets background image")
-        self.bg_image = random.randint(0,3)
+        l = len(imgs[self.state])
+        if l>1:
+            i = random.randint(0,l)
+            self.bg_image = imgs[self.state][i]
+        else:
+            self.bg_image = imgs[self.state][0]
 
     # returns TRue if message alrady shopwn
     def message_shown(self, event):
@@ -83,7 +98,7 @@ class Smile(object):
     # sets language in random 
     def set_language(self, event): 
         self.language = random.randint(0,2)
-        logger.info('set language to: ', self.language)
+        logger.info(F'set language to: {self.language}')
 
 states=['start', 
         'initial',
@@ -184,8 +199,8 @@ transitions2 = [
         'source': 'start', 
         'dest': 'wait_smiles', 
         'prepare': ['wait_time'], 
-        'conditions': 'elapsed_time', 
-        'after': 'set_bg'
+        'conditions': 'elapsed_time',
+        'before': ['set_language', 'set_bg']
         },
     { 
         'trigger': 'next', 
@@ -193,7 +208,7 @@ transitions2 = [
         'dest': 'end', 
         'prepare': ['count_smiles'], 
         'conditions': 'are_smiling', 
-        'after': 'set_bg'
+        'before': 'set_bg'
         },
     { 
         'trigger': 'next', 
@@ -201,6 +216,6 @@ transitions2 = [
         'dest': 'start', 
         'prepare': ['wait_time'], 
         'conditions': 'elapsed_time', 
-        'after': 'set_bg'
+        'before': 'set_bg'
         },
 ]

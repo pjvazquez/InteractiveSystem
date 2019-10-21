@@ -19,9 +19,14 @@ with open("./Config/application.conf", "r") as confFile:
 
 imagePath = conf['image_path']
 
+# IDEA: crate a self dictionary with images and
+# return the image based on state and language
+
+
 class GetImages:
     def __init__(self, statesName = 'states'):
         self.statesName = statesName
+        self.bg_images = {}
 
     def getImageConf(self):
         with open("./Config/Images.conf") as imageFile:
@@ -38,3 +43,7 @@ class GetImages:
             bg = cv2.resize(bg, (3840,2160))
             bg_images[state]=bg
         return bg_images
+
+    def generateImageDictLang(self):
+        imageData = self.getImageConf()
+        print(imageData)

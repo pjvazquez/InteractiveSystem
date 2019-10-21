@@ -48,7 +48,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     video_getter = VideoGet(source).start()
     logger.info("Creates video window -- XXXXX NO THREAD ---------------------")
     cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
-    # cv2.moveWindow("Video",3000,0)
+    cv2.moveWindow("Video",3000,0)
     cv2.setWindowProperty("Video",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
     frame = video_getter.frame
     # cv2.imshow("Video",frame)
@@ -62,8 +62,9 @@ def runThreads(source=0, FiniteStateMachine = None):
     # loads into a dictionary all images we are going to use
     # each state has its own images
     getimages = GetImages('states2')
+    getimages.generateImageDictLang()
     bg_images = getimages.generateImageDict()
-    logger.info("LOaded background images----------------------")
+    logger.info("Loaded background images with LEN: {len(bg_images)}  ----------------------")
 
     start = time.time()
     period = 0.3

@@ -17,14 +17,14 @@ def get_logger(name, level=DEFAULT_LOGGING_LEVEL):
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    ch = logging.StreamHandler(sys.stdout)
-    # ch = logging.FileHandler(F'interactiveSystem_{datetime.now()}.log')
+    ch0 = logging.StreamHandler(sys.stdout)
+    # ch1 = logging.FileHandler(F'interactiveSystem_{datetime.now()}.log')
     # TODO: use a rotatingFileHandler in the deployment mode
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
+    ch0.setFormatter(formatter)
 
-    logger.addHandler(ch)
+    logger.addHandler(ch0)
 
     return logger
 

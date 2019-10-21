@@ -23,10 +23,11 @@ class Smile(object):
         self.attempts = 0
         self.people = 0
         self.smiles = 0
-        self.max_wait = 2
+        self.max_wait = 3
         self.message = False
         self.language = 0 # 0: cast, 1: port, 2: galego
         self.bg_image = None
+        self.initial_time = time()
 
     # returns True if number of detected people in fron of the camera is >= 1
     def have_people(self, event): 
@@ -45,7 +46,16 @@ class Smile(object):
     # gets True if waiting time is over
     def elapsed_time(self, event): 
         return self.time_elapsed
-    
+    '''
+    # new elapsed time computes it from initial time
+    def elapsed_time(self, event): 
+        elapsed = time()-self.initial_time
+        if elapsed >= self.max_wait:
+            self.time_elapsed = True
+        else:
+            self.time_elapsed = False
+        return self.time_elapsed
+
     # computes elapsed time and sets elapsed_time True
     def wait_time(self, event): 
         logger.info("waiting time---------")
@@ -56,9 +66,22 @@ class Smile(object):
             if elapsed >= self.max_wait:
                 self.time_elapsed = True
                 logger.info("time elapsed--------------")
+    '''
+    def wait_time(self, event): 
+        elapsed = time()-self.initial_time
+        logger.info(f"Elapsed time was {elapsed}")
+        if elapsed >= self.max_wait:
+            self.time_elapsed = True
+        else:
+            self.time_elapsed = False
+        return self.time_elapsed
+
+    # sets initial time value, will change in every state change
+    def initial_time(self, event):
+        logger.info("Setting initial time value--------")
+        self.initial_time = time()
     
     # get number of people in front of the camera
-    
     def count_people(self, event):
         self.people = event.kwargs.get('people')
     
@@ -84,9 +107,11 @@ class Smile(object):
     # SURE THIS DO NOT WORK
     def set_bg(self, event):
         logger.info("-----------------------------sets background image")
+        self.initial_time = time()
         l = len(imgs[self.state])
-        if l>1:
-            i = random.randint(0,l)
+        logger.info(f"LEN is {l} for state {self.state}")
+        if l>=1:
+            i = random.randint(0,l-1)
             self.bg_image = imgs[self.state][i]
         else:
             self.bg_image = imgs[self.state][0]
@@ -208,7 +233,7 @@ transitions2 = [
         'dest': 'end', 
         'prepare': ['count_smiles'], 
         'conditions': 'are_smiling', 
-        'before': 'set_bg'
+        'before': ['set_bg']
         },
     { 
         'trigger': 'next', 
@@ -216,6 +241,6 @@ transitions2 = [
         'dest': 'start', 
         'prepare': ['wait_time'], 
         'conditions': 'elapsed_time', 
-        'before': 'set_bg'
+        'before': ['set_bg']
         },
 ]

@@ -77,7 +77,7 @@ class Smile(object):
         return self.time_elapsed
 
     # sets initial time value, will change in every state change
-    def initial_time(self, event):
+    def set_initial_time(self, event):
         logger.info("Setting initial time value--------")
         self.initial_time = time()
     
@@ -106,6 +106,7 @@ class Smile(object):
     # show atracting message on screen
     # SURE THIS DO NOT WORK
     def set_bg(self, event):
+        '''
         logger.info("-----------------------------sets background image")
         self.initial_time = time()
         l = len(imgs[self.state])
@@ -114,7 +115,8 @@ class Smile(object):
             i = random.randint(0,l-1)
             self.bg_image = imgs[self.state][i]
         else:
-            self.bg_image = imgs[self.state][0]
+            self.bg_image = imgs[self.state][0]'''
+        pass
 
     # returns TRue if message alrady shopwn
     def message_shown(self, event):
@@ -225,22 +227,23 @@ transitions2 = [
         'dest': 'wait_smiles', 
         'prepare': ['wait_time'], 
         'conditions': 'elapsed_time',
-        'before': ['set_language', 'set_bg']
+        'before': ['set_language'],
+        'after': 'set_initial_time'
         },
     { 
         'trigger': 'next', 
         'source': 'wait_smiles', 
         'dest': 'end', 
-        'prepare': ['count_smiles'], 
-        'conditions': 'are_smiling', 
-        'before': ['set_bg']
+        'prepare': ['count_smiles','wait_time'], 
+        'conditions': ['are_smiling', 'elapsed_time' ],
+        'after':'set_initial_time'
         },
     { 
         'trigger': 'next', 
         'source': 'end', 
         'dest': 'start', 
         'prepare': ['wait_time'], 
-        'conditions': 'elapsed_time', 
-        'before': ['set_bg']
+        'conditions': 'elapsed_time',
+        'after': 'set_initial_time'
         },
 ]

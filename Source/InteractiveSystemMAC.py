@@ -62,8 +62,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     # loads into a dictionary all images we are going to use
     # each state has its own images
     getimages = GetImages('states2')
-    getimages.generateImageDictLang()
-    bg_images = getimages.generateImageDict()
+    getimages.generateImageDict()
     logger.info("Loaded background images with LEN: {len(bg_images)}  ----------------------")
 
     start = time.time()
@@ -94,7 +93,8 @@ def runThreads(source=0, FiniteStateMachine = None):
                 logger.info(f"New State {FSM_state} with people={people} and smiles={smiles}")
                 prev_state = FSM_state
             # get image from bg dictionary
-            bg = bg_images[FSM_state]
+            # bg = bg_images[FSM_state]
+            bg = getimages.getImage(FSM_state, language)
 
         # gets frame from VideoGet thread
         # process frame in principal thread

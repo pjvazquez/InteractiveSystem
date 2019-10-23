@@ -65,22 +65,22 @@ class TaskManager(Process):
         
         logger.info("Here begins the work loop-------------------------------------------")
         while True:
-            logger.info("inside the while")
+            logger.debug("inside the while")
             task = self.inqueue.get()
-            logger.info("got task from queue")
+            logger.debug("got task from queue")
             if task is None:
                 logger.info("task is NONE")
                 time.sleep(0.01)
                 break
             start_time = time.time()
-            logger.info(F"Worker {worker_id} consuming task: {task.operation}")
+            logger.debug(F"Worker {worker_id} consuming task: {task.operation}")
             self.process_task(task)
-            logger.info(F"Task Result: {task}")
-            logger.info(F"Worker {worker_id} is done with task {task.operation}"
+            logger.debug(F"Task Result: {task}")
+            logger.debug(F"Worker {worker_id} is done with task {task.operation}"
                         F"in {time.time() - start_time} seconds. "
                         F"{self.inqueue.qsize()}:{self.outqueue.qsize()} IN:OUT queue status")
             self.outqueue.put(task, True, 0.5)
-            logger.info("Task inserted in OUT QUEUE")
+            logger.debug("Task inserted in OUT QUEUE")
         self.inqueue.put(None)
 
     def start(self):
@@ -110,9 +110,9 @@ class TaskManager(Process):
                 return None
             else:
                 detections = self.outqueue.get()
-                logger.info(F"Task result from queue: {detections}")
+                logger.debug(F"Task result from queue: {detections}")
                 return detections
         except NotImplementedError:
             detections = self.outqueue.get()
-            logger.info(F"Task result from queue: {detections}")
+            logger.debug(F"Task result from queue: {detections}")
             return detections

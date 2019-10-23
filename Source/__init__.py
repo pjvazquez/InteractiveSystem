@@ -2,4 +2,4 @@
 import logging
 
 VERSION = "0.8"
-DEFAULT_LOGGING_LEVEL = logging.INFO
+DEFAULT_LOGGING_LEVEL = logging.DEBUG

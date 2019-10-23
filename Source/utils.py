@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import logging
+from logging.handlers import RotatingFileHandler
 import sys
 import time
 import cv2
@@ -18,13 +19,17 @@ def get_logger(name, level=DEFAULT_LOGGING_LEVEL):
     logger.setLevel(level)
 
     ch0 = logging.StreamHandler(sys.stdout)
-    # ch1 = logging.FileHandler(F'interactiveSystem_{datetime.now()}.log')
+    ch0.setLevel(level)
+    ch1 = RotatingFileHandler('./Logs/interactiveSystem.log', maxBytes=10000000, backupCount=10)
+    ch1.setLevel(level)
     # TODO: use a rotatingFileHandler in the deployment mode
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s | %(message)s')
     ch0.setFormatter(formatter)
+    ch1.setFormatter(formatter)
 
     logger.addHandler(ch0)
+    logger.addHandler(ch1)
 
     return logger
 
@@ -74,6 +79,8 @@ def draw_label(image, point, label, font=cv2.FONT_HERSHEY_SIMPLEX,
 
 
 def overlay_transparent(background, overlay, x, y):
+    # as a little trick, if x and/or y is negative
+    # I can set x and y as left or down....
 
     background_width = background.shape[1]
     background_height = background.shape[0]
@@ -82,6 +89,12 @@ def overlay_transparent(background, overlay, x, y):
         return background
 
     h, w = overlay.shape[0], overlay.shape[1]
+
+    if x == -1 :
+        x = background_width - w -1
+    
+    if y == -1:
+        y = background_height - h - 1
 
     if x + w > background_width:
         w = background_width - x
@@ -111,7 +124,7 @@ def get_happiness(detections = None):
     happiness = 0
     for face in detections["analyzed_faces"]:
         if "emotions" in face and face["emotions"] is not None:
-            happiness += int(math.ceil(face["emotions"]["happy"] * 10))
+            happiness += int(math.ceil(face["emotions"]["happy"]))
     return happiness
 
 def get_people(detections = None):

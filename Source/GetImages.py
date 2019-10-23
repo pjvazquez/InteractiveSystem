@@ -26,8 +26,7 @@ imagePath = conf['image_path']
 
 
 class GetImages:
-    def __init__(self, statesName = 'states'):
-        self.statesName = statesName
+    def __init__(self):
         self.bg_images = pd.DataFrame(columns=["index", "image"])
         self.languages={}
         self.imageData={}
@@ -46,21 +45,28 @@ class GetImages:
         for l in self.imageData.keys():
             self.languages[str(nl)]=l
             nl += 1
+            '''
             for s in self.imageData[l].keys():
                 for v in range(0, len(self.imageData[l][s])-1):
-                    bg = cv2.imread(imagePath + self.imageData[l][s][v])
+                    logger.info(f"Image path: {imagePath + str(l)}/{self.imageData[l][s][v]}")
+                    bg = cv2.imread(imagePath + str(l) +"/" + self.imageData[l][s][v])
                     bg = cv2.resize(bg, (3840,2160))
-                    self.bg_images.append({l+s+str(v):bg}, ignore_index=True)
-        print(self.languages)
-        print(self.bg_images)
+                    self.bg_images.append({l+s+str(v):bg}, ignore_index=True)'''
+        # print(self.languages)
+        # print(self.bg_images)
     
     def getImage(self, state, lang):
-        logger.info(f"Got image for -----------------{state}--{lang}")
         l = self.languages[str(lang)]
-        vmax = len(self.imageData[l][state])
-        v = 0
-        if vmax > 1:
-            v = random.randint(0,vmax-1)
-        bg = cv2.imread(imagePath + self.imageData[l][state][v])
-        bg = cv2.resize(bg, (3840,2160))
-        return bg
+        logger.info(f"Got image for -----------------{state}--{lang}:{l}")
+        if state in self.imageData[l].keys():
+            vmax = len(self.imageData[l][state])
+            v = 0
+            if vmax > 1:
+                v = random.randint(0,vmax-1)
+            logger.debug(f"Image path: {imagePath + l}/{self.imageData[l][state][v]}")
+            bg = cv2.imread(imagePath + l +"/" + self.imageData[l][state][v])
+            logger.debug(f"Image shape: {bg.shape}")
+            bg = cv2.resize(bg, (3840,2160))
+            return bg
+        else:
+            return None

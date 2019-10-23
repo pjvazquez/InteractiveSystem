@@ -45,7 +45,7 @@ def runThreads(source=0, FiniteStateMachine = None):
     faceStack = deque(maxlen = 10)
 
     logger.info("Start video getter -----------------------")
-    video_getter = VideoGet(source).start()
+    video_getter = VideoGet(source,(1600,900)).start()
     logger.info("Creates video window -- XXXXX NO THREAD ---------------------")
     cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
     cv2.moveWindow("Video",3000,0)
@@ -59,18 +59,19 @@ def runThreads(source=0, FiniteStateMachine = None):
     work_manager.start.remote()
     logger.info("Instantiated Task Manager")
 
-    # loads into a dictionary all images we are going to use
-    # each state has its own images
-    getimages = GetImages('states2')
+    # instantiates GetImage object
+    getimages = GetImages()
+    # loads data from conf file, generates language dict
     getimages.generateImageDict()
-    logger.info("Loaded background images with LEN: {len(bg_images)}  ----------------------")
+    logger.info("GET IMAGES - generated image dictionary")
 
     start = time.time()
     period = 0.3
     people = 0
     smiles = 0
     language = 0
-    prev_state = FiniteStateMachine.state
+    prev_state = None
+    FSM_state = None
     detections = None
 
     while True:
@@ -81,20 +82,22 @@ def runThreads(source=0, FiniteStateMachine = None):
 
         # if defined a FSM then evolve states and returns current state
         if FiniteStateMachine is not None:
+            logger.debug(F"FSM NEXT function call with STATE: {FSM_state}, smiles:{smiles} and people: {people}")
             FiniteStateMachine.next(smiles=smiles, people=people)
             language = FiniteStateMachine.language
-            logger.info(f"FSM language set to {language}")
-
-            img_ = FiniteStateMachine.bg_image
-            logger.info(f"FSM image set to {img_}")
+            logger.debug(f"FSM language set to {language}")
             
             FSM_state = FiniteStateMachine.state
+            logger.debug(F"FSM actual state is : {FSM_state}")
             if prev_state != FSM_state:
-                logger.info(f"New State {FSM_state} with people={people} and smiles={smiles}")
+                logger.debug(f"New State {FSM_state} with people={people} and smiles={smiles}")
                 prev_state = FSM_state
-            # get image from bg dictionary
-            # bg = bg_images[FSM_state]
-            bg = getimages.getImage(FSM_state, language)
+                # when states changes the system looks for a nother image to show
+                logger.debug(f"FSM - Gets new image for state: {FSM_state} and language: {language}")
+                new_bg = getimages.getImage(FSM_state, language)
+                # if there is no new bg image, bg_image keeps the same
+                if new_bg is not None:
+                    bg = new_bg
 
         # gets frame from VideoGet thread
         # process frame in principal thread
@@ -105,45 +108,48 @@ def runThreads(source=0, FiniteStateMachine = None):
         if (time.time() - start) > period:
             start = time.time()
             try:
-                logger.info("-------------Analyzing frame")
+                logger.info("CALL IMAGE PREDICTION TASK")
                 task = ImagePredictionTask(image=frame,result="", time=start, operation='faces')
-                logger.info("-------------creates task")
+                logger.debug("CREATES TASK AND SEND IT TO REMOTE PROCESS")
                 taskRemote = ray.put(task)
-                logger.info(F"-------------set task in remote")
+                logger.debug("EXECUTES PROCESS TASK IN REMOTE")
                 taskRemote = work_manager.process_task.remote(taskRemote)
-                # get remote result
-                # taskRemote = work_manager.get_result.remote()
+                logger.debug("GETS TASK RESULT POINTER FROM REMOTE")
                 task = ray.get(taskRemote)
-                
+
                 if task is not None:
                     detections = task.result
-                    logger.info(F"Got result from out queue: {detections}")
+                    logger.debug(F"Got task result: {detections}")
                     people = get_people(detections)
+                    logger.debug(F"Got number of people from detections: {people}")
                     if people > 0:
                         smiles = get_happiness(detections)/people
                     else:
                         smiles = 0
+                    logger.debug(F"Got % of smiles from detections: {smiles}")
                 else:
                     detections = None
+
             except Exception as err:
                 traceback.print_exc()
-                logger.exception(F"A problem while in loop: {err}" )
+                logger.exception(F"FACE DETECTION LOOP ERROR - {err}" )
                 continue
         
         logger.info("Show result in Video Window-----------------------")
         if detections is not None:
             frame = draw_bounding_boxes(detections, frame, (255,0,0))
-        frame = overlay_transparent(bg, frame,0,0)
-        # shows new framw
+        frame = overlay_transparent(bg, frame,-1,0)
+        # shows new frame
         cv2.imshow("Video", frame)
 
 
 def main():
     ray.init()
     smile = StateManager.Smile()
+    logger.info("FSM created FiniteStateMachine")
     fsm = Machine(smile, 
-                states = StateManager.states2, 
-                transitions = StateManager.transitions2,
+                states = StateManager.states, 
+                transitions = StateManager.transitions,
                 send_event=True, # allows to pass event values to the FSM
                 initial="start")
     runThreads(source=0,FiniteStateMachine=smile )

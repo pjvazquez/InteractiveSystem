@@ -222,20 +222,6 @@ if __name__ == "__main__":
 
     happiness_threshold = conf['happiness_threshold']
 
-    '''    face_id_backend = Elasticsearch(
-        conf["face_id_backend"]["hosts"],
-        http_auth=(conf["face_id_backend"]["user"], conf["face_id_backend"]["pass"]),
-        port=conf["face_id_backend"]["port"],
-        scheme=conf["face_id_backend"]["scheme"]
-    )
-    
-    processor = FaceAnalyzer(None, face_id_backend,
-                            identify_faces=False,
-                            detect_ages=True,
-                            detect_emotions=True,
-                            detect_genders=True,
-                            face_detection_upscales=0)
-    '''
     processor = FaceAnalyzer(None, 
                             None,
                             identify_faces=False,

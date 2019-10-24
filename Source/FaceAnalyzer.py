@@ -92,9 +92,15 @@ class FaceAnalyzer:
         -------
         analyze_faces : function
         """
-        logger.info(F"Process detect faces to catch all faces in image-- in frame with shape: {rgb_frame.shape}")
+        logger.debug(F"Process detect faces to catch all faces in image-- in frame with shape: {rgb_frame.shape}")
         detected_faces, aligned_faces = self.face_detector.detect_faces(rgb_frame, self.face_detection_upscales)
-        logger.info("Process analyze faces to extract faces info")
+        logger.debug(f"DEtected {len(detected_faces)} faces and {len(aligned_faces)} faces aligned")
+        # if detected more than 10 faces, then limit to 10 so not saturate 
+        if len(detected_faces) >= 10:
+            detected_faces = detected_faces[:10]
+            aligned_faces = aligned_faces[:10]
+
+        logger.debug("Process analyze faces to extract faces info")
         return self.analyze_faces(detected_faces, aligned_faces)
 
     def analyze_faces(self, detected_faces, aligned_faces):
@@ -144,7 +150,9 @@ class FaceAnalyzer:
 
     def process_frame(self, task):
         logger.info("Processing Frame---")
+        init_time = time.time()
         results = self.analyze_frame(task.image)
+        logger.debug(f"Faces anañyzed in {time.time()-init_time}")
         # sets process task equal to analyze frame result
         task.result = results
 

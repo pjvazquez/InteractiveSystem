@@ -65,11 +65,17 @@ class Smile(object):
 
     def wait_time(self, event): 
         elapsed = time()-self.initial_time
-        logger.debug(f"WAIT TIME - Elapsed time was {elapsed}")
-        if elapsed >= self.max_wait:
-            self.time_elapsed = True
+        logger.debug(f"WAIT TIME - Elapsed time was {elapsed} in state {self.state}")
+        if self.state in ['ask_question','show_message']:
+            if elapsed >= self.max_wait*1.5:
+                self.time_elapsed = True
+            else:
+                self.time_elapsed = False
         else:
-            self.time_elapsed = False
+            if elapsed >= self.max_wait:
+                self.time_elapsed = True
+            else:
+                self.time_elapsed = False
         return self.time_elapsed
 
     def long_wait_time(self, event): 
@@ -139,6 +145,7 @@ states=['start',
         'get_people', 
         'have_smiles', 
         'get_smiles',
+        'ask_question',
         'show_message', 
         'end']
 
@@ -205,7 +212,7 @@ transitions = [
     { # have_smiles state transition to show_message
         'trigger': 'next', 
         'source': 'have_smiles', 
-        'dest': 'show_message', 
+        'dest': 'ask_question', 
         'prepare': ['wait_time','count_smiles'], 
         'conditions': ['are_smiling','elapsed_time'], 
         'after': 'set_initial_time'
@@ -214,6 +221,14 @@ transitions = [
         'trigger': 'next', 
         'source': 'get_smiles', 
         'dest': 'have_smiles', 
+        'after': 'set_initial_time'
+        },
+    { # show_message state tranmsition to end
+        'trigger': 'next', 
+        'source': 'ask_question', 
+        'dest': 'show_message', 
+        'prepare': ['wait_time'], 
+        'conditions': ['elapsed_time'], 
         'after': 'set_initial_time'
         },
     { # show_message state tranmsition to end

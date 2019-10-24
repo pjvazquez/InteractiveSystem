@@ -20,7 +20,7 @@ def get_logger(name, level=DEFAULT_LOGGING_LEVEL):
 
     ch0 = logging.StreamHandler(sys.stdout)
     ch0.setLevel(level)
-    ch1 = RotatingFileHandler('./Logs/interactiveSystem.log', maxBytes=10000000, backupCount=10)
+    ch1 = RotatingFileHandler('./Logs/interactiveSystem.log', maxBytes=5000000, backupCount=10)
     ch1.setLevel(level)
     # TODO: use a rotatingFileHandler in the deployment mode
 

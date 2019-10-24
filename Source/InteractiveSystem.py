@@ -6,7 +6,8 @@ import json
 import numpy as np
 from datetime import datetime
 from functools import wraps
-from utils import get_logger, draw_bounding_boxes, overlay_transparent, get_happiness, get_people
+from utils import draw_bounding_boxes, overlay_transparent, get_happiness, get_people
+from LogUtil import get_logger
 import FaceAnalyzer as fa
 from VideoGet import VideoGet
 from VideoShow import VideoShow

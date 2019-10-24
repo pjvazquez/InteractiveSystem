@@ -1,5 +1,6 @@
 from threading import Thread
 import cv2
+from LogUtil import get_logger
 
 class VideoGet:
     """

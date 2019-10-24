@@ -3,7 +3,7 @@ import time
 from multiprocessing import Process, Queue, Manager
 
 from Aggregator import Aggregator
-from utils import get_logger
+from LogUtil import get_logger
 
 logger = get_logger(__name__)
 

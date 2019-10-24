@@ -6,7 +6,7 @@ import dlib
 import numpy as np
 from imutils.face_utils import FaceAligner
 import imutils
-from utils import get_logger
+from LogUtil import get_logger
 from TaskManager import ImagePredictionTask
 
 logger = get_logger(__name__)

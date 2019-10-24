@@ -1,6 +1,6 @@
 from transitions import Machine
 from time import time
-from utils import get_logger
+from LogUtil import get_logger
 import random
 import json
 
@@ -22,8 +22,8 @@ class Smile(object):
         self.time_elapsed = False
         self.long_time_elapsed = False
         self.attempts = 0
-        self.people = 0
-        self.smiles = 0
+        self.people = 0.0
+        self.smiles = 0.0
         self.max_wait = 3.0
         self.message = False
         self.language = 0 # 0: cast, 1: port, 2: galego
@@ -111,7 +111,7 @@ class Smile(object):
     # returns True if people is smiling
     def are_smiling(self, event):
         logger.debug("ARE SMILING - checks if they are smiling .... ")
-        if self.smiles >= 0.8:
+        if self.smiles >= 0.55:
             return True
         else:
             return False
@@ -119,7 +119,7 @@ class Smile(object):
     # returns True if people is smiling
     def are_not_smiling(self, event):
         logger.debug("ARE NOT SMILING - checks if they are smiling .... ")
-        if self.smiles < 0.8:
+        if self.smiles < 0.55:
             return True
         else:
             return False

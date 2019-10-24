@@ -3,7 +3,7 @@ import tensorflow as tf
 import inception_resnet_v1
 
 from imutils import resize
-from utils import get_logger
+from LogUtil import get_logger
 
 logger = get_logger(__name__)
 

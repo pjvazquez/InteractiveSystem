@@ -1,7 +1,7 @@
 from transitions import Machine
 from transitions.extensions import GraphMachine
 from time import time
-from utils import get_logger
+from LogUtil import get_logger
 import random
 import json
 

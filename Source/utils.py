@@ -7,10 +7,12 @@ import time
 import cv2
 import math
 import numpy as np
+from LogUtil import get_logger
 
-from __init__ import DEFAULT_LOGGING_LEVEL
+from __init__ import VERSION
+logger = get_logger(__name__)
 
-
+'''
 def get_logger(name, level=DEFAULT_LOGGING_LEVEL):
 
     from datetime import datetime
@@ -32,7 +34,7 @@ def get_logger(name, level=DEFAULT_LOGGING_LEVEL):
     logger.addHandler(ch1)
 
     return logger
-
+'''
 
 def timeit(method):
     def timed(*args, **kw):
@@ -123,8 +125,11 @@ def overlay_transparent(background, overlay, x, y):
 def get_happiness(detections = None):
     happiness = 0
     for face in detections["analyzed_faces"]:
+        logger.debug(f"GET HAPPINESS has faces: {face}")
         if "emotions" in face and face["emotions"] is not None:
-            happiness += int(math.ceil(face["emotions"]["happy"]))
+            val = face["emotions"]["happy"]
+            happiness += int(math.floor(face["emotions"]["happy"]+0.6))
+            logger.debug(f"increasing happines: {happiness} with value: {val}")
     return happiness
 
 def get_people(detections = None):

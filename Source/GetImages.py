@@ -11,7 +11,7 @@ import utils
 import cv2
 import pandas as pd
 from __init__ import VERSION
-from utils import get_logger
+from LogUtil import get_logger
 
 logger = get_logger(__name__)
 

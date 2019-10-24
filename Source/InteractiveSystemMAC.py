@@ -41,8 +41,9 @@ def runThreads(source=0, FiniteStateMachine = None):
     VideoShow objects/threads.
     """
 
-    # stack to register last 10 emotions (5 seconds?????)
+    # stack to register last 10 detected faces and last 10 detected smiles
     faceStack = deque(maxlen = 10)
+    smileStack = deque(maxlen=10)
 
     logger.info("Start video getter -----------------------")
     video_getter = VideoGet(source,(1600,900)).start()
@@ -68,7 +69,9 @@ def runThreads(source=0, FiniteStateMachine = None):
     start = time.time()
     period = 0.3
     people = 0
+    faces = 0
     smiles = 0
+    happiness = 0
     language = 0
     prev_state = None
     FSM_state = None
@@ -82,8 +85,8 @@ def runThreads(source=0, FiniteStateMachine = None):
 
         # if defined a FSM then evolve states and returns current state
         if FiniteStateMachine is not None:
-            logger.debug(F"FSM NEXT function call with STATE: {FSM_state}, smiles:{smiles} and people: {people}")
-            FiniteStateMachine.next(smiles=smiles, people=people)
+            logger.debug(F"FSM NEXT function call with STATE: {FSM_state}, smiles:{happiness} and people: {faces}")
+            FiniteStateMachine.next(smiles=happiness, people=faces)
             language = FiniteStateMachine.language
             logger.debug(f"FSM language set to {language}")
             
@@ -121,12 +124,20 @@ def runThreads(source=0, FiniteStateMachine = None):
                     detections = task.result
                     logger.debug(F"Got task result: {detections}")
                     people = get_people(detections)
+                    faceStack.append(people)
                     logger.debug(F"Got number of people from detections: {people}")
                     if people > 0:
                         smiles = get_happiness(detections)/people
                     else:
                         smiles = 0
-                    logger.debug(F"Got % of smiles from detections: {smiles}")
+                    smileStack.append(smiles)
+                    # is more efficient to accumulate measures through time
+                    # to dilute moment detection problems
+                    # calculates number of faces through time divided by 10
+                    faces = np.sum(people)/10
+                    # calculates happines as the sum of elements in stack divided by 10
+                    happiness = np.sum(smiles)/10
+                    logger.debug(F"Got % of smiles from detections: {smiles} and accumulatd: {happiness}")
                 else:
                     detections = None
 

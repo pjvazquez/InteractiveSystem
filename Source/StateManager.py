@@ -29,7 +29,7 @@ class Smile(object):
         self.language = 0 # 0: cast, 1: port, 2: galego
         self.initial_time = time()
         self.initial_long_wait_time = time()
-        self.max_long_wait_time = 30
+        self.max_long_wait_time = 15
 
     # returns True if number of detected people in fron of the camera is >= 1
     def have_people(self, event): 
@@ -42,7 +42,7 @@ class Smile(object):
 
     # returns False if number of people < 1
     def dont_have_people(self, event):
-        if self.people < 1:
+        if self.people < 0.8:
             dont_have = True
         else:
             dont_have = False
@@ -105,7 +105,7 @@ class Smile(object):
     # returns True if people is smiling
     def are_smiling(self, event):
         logger.debug("ARE SMILING - checks if they are smiling .... ")
-        if self.smiles > 0.5:
+        if self.smiles >= 0.8:
             return True
         else:
             return False
@@ -113,7 +113,7 @@ class Smile(object):
     # returns True if people is smiling
     def are_not_smiling(self, event):
         logger.debug("ARE NOT SMILING - checks if they are smiling .... ")
-        if self.smiles < 0.5:
+        if self.smiles < 0.8:
             return True
         else:
             return False

@@ -111,7 +111,7 @@ class Smile(object):
     # returns True if people is smiling
     def are_smiling(self, event):
         logger.debug("ARE SMILING - checks if they are smiling .... ")
-        if self.smiles >= 0.55:
+        if self.smiles >= 0.45:
             return True
         else:
             return False
@@ -119,7 +119,7 @@ class Smile(object):
     # returns True if people is smiling
     def are_not_smiling(self, event):
         logger.debug("ARE NOT SMILING - checks if they are smiling .... ")
-        if self.smiles < 0.55:
+        if self.smiles < 0.45:
             return True
         else:
             return False

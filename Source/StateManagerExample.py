@@ -1,6 +1,6 @@
 from transitions import Machine
 from transitions.extensions import GraphMachine
-from time import time
+from time import time, sleep
 from LogUtil import get_logger
 import random
 import json
@@ -356,11 +356,12 @@ def main():
                     send_event=True, 
                     initial='start')
 
-    for i in range(10):
-        people = int(i%2.0)
-        smiles = int(i%2.0)
-        print("STATE--------------------------------", smile_.state, people, smiles, smile_.some_value)
+    for i in range(50):
+        people = int(i//2.0)
+        smiles = int(i//3.0)
+        print("STATE--------------------------------", smile_.state, people, smiles)
         smile_.next(people=people, smiles=smiles)
+        sleep(0.5)
 
 
 def create_graph():
@@ -376,4 +377,4 @@ def create_graph():
     m.get_graph().draw('state_diagram_3.png', prog='dot')
 
 if __name__ == "__main__":
-    create_graph()
+    main()
